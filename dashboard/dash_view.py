@@ -71,11 +71,22 @@ dist_sintomas = px.bar(top_sintomas, x='Sintoma', y='Frequência', color='diagno
 
 dist_sintomas.update_layout(xaxis_title='Sintoma', yaxis_title='Porcentagem de Sintomas', xaxis_tickangle=-45)
 
-# Gráfico de distribuição de Casos por Estado
-dist_estado = px.histogram(dados_dash_2020_2024, x='estado', title="Distribuição de Casos por Estado",
-                           labels={'estado': 'Estado', 'count': 'Número de Casos'},
-                           color_discrete_sequence=['blue'])
-dist_estado.update_layout(xaxis_title='Estado', yaxis_title='Número de Casos', xaxis_tickangle=-45)
+
+## Filtrar os 10 principais sintomas para casos positivos de COVID
+top_10_sintomas_positivos = top_sintomas[top_sintomas['diagnosticoCOVID'] == 'COVID Positivo'].nlargest(10, 'Frequência')
+
+# Gráfico de dispersão de distribuição de Sintomas para Casos Positivos de COVID
+dist_sintomas_positivos_scatter = px.scatter(top_10_sintomas_positivos,
+                                             x='Sintoma', y='Frequência',
+                                             title="Top 10 Sintomas para Casos Positivos de COVID",
+                                             labels={'Sintoma': 'Sintoma', 'Frequência': 'Porcentagem de Sintomas'},
+                                             color='Sintoma',
+                                             size='Frequência',
+                                             size_max=60,
+                                             color_discrete_sequence=px.colors.sequential.RdBu)
+
+dist_sintomas_positivos_scatter.update_layout(xaxis_title='Sintoma', yaxis_title='Porcentagem de Sintomas', xaxis_tickangle=-45)
+dist_sintomas_positivos_scatter.update_traces(textposition='top center')
 
 # Gráfico de distribuição de Casos por Sexo
 dist_sexo = px.histogram(dados_dash_2020_2024, x='sexo', title="Distribuição de Casos por Sexo",
@@ -102,9 +113,9 @@ def render_dashboard_content():
     Function to render the Dashboard content.
     """
     return html.Div([
-        html.H3("Dashboard de Dados", style={'color': '#1e90ff', 'font-family': 'Arial, sans-serif'}),
+        html.H1("Dashboard de Dados De Covid19 2020 - 2024", style={'color': '#1e90ff', 'font-family': 'Arial, sans-serif', 'textAlign': 'center'}),
         html.Div([
-            dcc.Graph(figure=dist_estado, style={'grid-column': '1 / 2'}),
+            dcc.Graph(figure=dist_sintomas_positivos_scatter, style={'grid-column': '1 / 2'}),
             dcc.Graph(figure=dist_sexo, style={'grid-column': '2 / 3'}),
             dcc.Graph(figure=dist_faixa_etaria, style={'grid-column': '1 / 3'}),
             dcc.Graph(figure=dist_idade, style={'grid-column': '1 / 2'}),

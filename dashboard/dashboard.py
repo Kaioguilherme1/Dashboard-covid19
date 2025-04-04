@@ -14,7 +14,12 @@ from IA_Models.modelo_otimizado import modelo_otimizado
 
 
 # organiza a lista para armazenar os dados do paciente para o processamento de IA
-paciente = pd.read_csv('datasets/Brasil-2021-processado_IA.csv')
+Sintomas = pd.read_csv('datasets/Brasil-2021-processado_IA.csv')
+dataset_limpo = pd.read_csv('datasets/Brasil-2021-limpo.csv')
+# seleciona somente as colunas de idade e sexo do dataset_limpo
+dados = dataset_limpo[['idade', 'sexo']]
+# adiciona as colunas do dataset Sintomas
+paciente = pd.concat([dados, Sintomas], axis=1)
 
 # Limpa o dataframe do paciente mas mantem
 paciente = paciente.iloc[0:0]
@@ -140,8 +145,17 @@ def update_output(n_clicks, nome, genero, idade, sintomas_gerais, outros_sintoma
         # Preenche os dados do paciente
         info_paciente = {}
         info_paciente['nome'] = nome
-        info_paciente['genero'] = genero
-        info_paciente['idade'] = idade
+        sexo = 0
+        # converte o genero para label antes de adicionar ao dicionario
+        if genero == 'Masculino':
+            sexo = 1
+        elif genero == 'Feminino':
+            sexo = 2
+        elif genero == 'Outro':
+            sexo = 3
+        dados_paciente['sexo'] = sexo
+        dados_paciente['idade'] = idade
+
 
         # Adiciona sintomas gerais ao dicionário
         if sintomas_gerais:
@@ -172,18 +186,26 @@ def update_output(n_clicks, nome, genero, idade, sintomas_gerais, outros_sintoma
         prob_nao_covid = previsao[0][0]
         prob_covid = previsao[0][1]
 
-        # Calcula a porcentagem de pessoas com cada sintoma que estavam ou não com COVID
-        sintomas_cols = sintomas_gerais + outros_sintomas if sintomas_gerais and outros_sintomas else sintomas_gerais or outros_sintomas
-        frequencia_sintomas = dados_dash_2020_2024.groupby('diagnosticoCOVID')[sintomas_cols].mean().reset_index()
-        frequencia_sintomas_long = frequencia_sintomas.melt(id_vars='diagnosticoCOVID', var_name='Sintoma', value_name='Frequência')
-        frequencia_sintomas_long['Frequência'] *= 100
-        frequencia_sintomas_long['diagnosticoCOVID'] = frequencia_sintomas_long['diagnosticoCOVID'].map({0: 'Covid negativo', 1: 'COVID Positivo'})
+        # pega o numero de linhas da base
+        num_linhas = dados_dash_2020_2024.shape[0]
 
-        # Criar gráfico de barras
+        if sintomas_gerais is not None or outros_sintomas is not None or comorbidades is not None:
+            # Calcula a porcentagem de pessoas com cada sintoma que estavam ou não com COVID
+            sintomas_cols = sintomas_gerais + outros_sintomas + comorbidades if sintomas_gerais and outros_sintomas and comorbidades else sintomas_gerais or outros_sintomas or comorbidades
+
+            frequencia_sintomas = dados_dash_2020_2024.groupby('diagnosticoCOVID')[sintomas_cols].mean().reset_index()
+            frequencia_sintomas_long = frequencia_sintomas.melt(id_vars='diagnosticoCOVID', var_name='Sintoma', value_name='Frequência')
+            frequencia_sintomas_long['Frequência'] *= 100
+            frequencia_sintomas_long['diagnosticoCOVID'] = frequencia_sintomas_long['diagnosticoCOVID'].map({0: 'Covid negativo', 1: 'COVID Positivo'})
+        else:
+            frequencia_sintomas_long = pd.DataFrame(columns=['diagnosticoCOVID', 'Sintoma', 'Frequência'])
+
+        # Criar gráfico de barras para sintomas
         dist_sintomas = px.bar(frequencia_sintomas_long, x='Sintoma', y='Frequência', color='diagnosticoCOVID',
                                barmode='group',
-                               title="Frequência de Sintomas por Diagnóstico de COVID",
-                               labels={'diagnosticoCOVID': 'Diagnóstico', 'Frequência': 'Porcentagem de Sintomas'})
+                               title=f"Frequência de Sintomas por Diagnóstico de COVID entre {num_linhas} pacientes ",
+                               labels={'diagnosticoCOVID': 'Diagnóstico', 'Frequência': 'Porcentagem de Sintomas'},
+                               facet_col='diagnosticoCOVID')
         dist_sintomas.update_layout(xaxis_title='Sintoma', yaxis_title='Porcentagem de Sintomas', xaxis_tickangle=-45)
 
         # Formata a exibição dos resultados
@@ -202,7 +224,7 @@ def update_output(n_clicks, nome, genero, idade, sintomas_gerais, outros_sintoma
             html.P(f"Chances de não ter COVID: {prob_nao_covid:.2%}", style={'font-size': '18px', 'color': '#333'}),
             html.P(f"Chances de ter COVID: {prob_covid:.2%}",
                    style={'font-size': '18px', 'color': '#333', 'font-weight': 'bold'}),
-            dcc.Graph(figure=dist_sintomas)
+            dcc.Graph(figure=dist_sintomas),
         ], style={'border-radius': '10px', 'background-color': '#f9f9f9', 'padding': '20px',
                   'box-shadow': '0px 0px 10px rgba(0, 0, 0, 0.1)'})
     return html.Div()

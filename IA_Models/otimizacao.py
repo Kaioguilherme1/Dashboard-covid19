@@ -1,20 +1,24 @@
 #@title 4.3. Utilização de técnica para identificação dos melhores hiperparâmetros
+import os, sys
+
+# Adiciona a referencia da pasta IA_Models
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import RandomizedSearchCV
 
-from data_train import X_train, y_train, X_test, y_test
+from IA_Models.data_train import X_train, y_train, X_test, y_test
 
 # 1. Definir o modelo_hiper
 modelo_hiper = RandomForestClassifier(random_state=42)
 
 # 2. Melhorar as faixas de parâmetros para RandomizedSearchCV
 param_dist = {
-    "n_estimators": [30, 40, 50, 60, 70, 80, 90, 100],  # Número de árvores na floresta
-    "max_depth": [None,10 ,20 ,30, 40, 50, ],  # Profundidade máxima das árvores
-    "min_samples_split": [1, 2, 3, 5, 6, 7, 8, 10, 12, 14, 16, 18],  # Número mínimo de amostras para dividir um nó
+    "n_estimators": [30, 40, 50, 60, 70, 80, 90, 100, 150],  # Número de árvores na floresta
+    "max_depth": [None,10 ,20 ,30, 40, 50, 100],  # Profundidade máxima das árvores
+    "min_samples_split": [1, 2, 3, 5, 6, 7, 8, 10, 12, 14, 16, 18, 29 ,25],  # Número mínimo de amostras para dividir um nó
     "min_samples_leaf": [1, 2, 3, 4, 5, 6, 7, 8, 16],  # Número mínimo de amostras em cada nó folha
     "max_features": ["sqrt", "log2", None],  # Número máximo de features a considerar
     "bootstrap": [True, False],  # Amostragem com reposição ou sem

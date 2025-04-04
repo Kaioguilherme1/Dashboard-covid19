@@ -1,4 +1,8 @@
-from data_train import X_train, X_test, y_train, y_test
+import os, sys
+
+# Adiciona a referencia da pasta IA_Models
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+from IA_Models.data_train import X_train, X_test, y_train, y_test
 from sklearn.ensemble import RandomForestClassifier
 from avaliar import avaliar_modelo
 

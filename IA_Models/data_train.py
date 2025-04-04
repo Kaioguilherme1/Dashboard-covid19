@@ -1,9 +1,21 @@
+import os, sys
+
+# Adiciona a referencia da pasta IA_Models
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+
 # Carregar o dataset
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
-dados_final = pd.read_csv('datasets/Brasil-2021-processado_IA.csv')
-# print(f'Dataset IA shape: {dados_final.shape}')
+Sintomas = pd.read_csv('datasets/Brasil-2021-processado_IA.csv')
+dataset_limpo = pd.read_csv('datasets/Brasil-2021-limpo.csv')
+# seleciona somente as colunas de idade e sexo do dataset_limpo
+dados = dataset_limpo[['idade', 'sexo']]
+# adiciona as colunas do dataset Sintomas
+dados_final = pd.concat([dados, Sintomas], axis=1)
+
+print(f'Dataset IA shape: {dados_final.shape}')
 # print(f'Colunas: {dados_final.columns.tolist} ')
 
 # Divide os dados De treino
@@ -11,9 +23,9 @@ dados_final = pd.read_csv('datasets/Brasil-2021-processado_IA.csv')
 # print(dados_final.head())
 
 # Codificar "sexo" para valores numéricos com LabelEncoder
-#if 'sexo' in dados.columns:
-#    label_encoder = LabelEncoder()
-#    dados_final['sexo'] = label_encoder.fit_transform(dados_final['sexo'])
+if 'sexo' in dados.columns:
+   label_encoder = LabelEncoder()
+   dados_final['sexo'] = label_encoder.fit_transform(dados_final['sexo'])
 
 # Separar variáveis independentes (Features) e a variável alvo (Label)
 Features = dados_final.drop(columns=['diagnosticoCOVID'])  # Remove a variável alvo das Features
