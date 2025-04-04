@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d55f2ad2-acb6-421a-a8ab-b83641285716" name="Changes" comment="" />
+    <list default="true" id="d55f2ad2-acb6-421a-a8ab-b83641285716" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Repositorio.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/dash_view.py" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/dash_view.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dashboard/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/dashboard/dashboard.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -17,35 +22,53 @@
       </list>
     </option>
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 7
-}]]></component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Kaioguilherme1&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Kaioguilherme1/Dashboard-covid19.git&quot;,
+    &quot;accountId&quot;: &quot;578f5c8b-cadd-4712-af32-b036a645d534&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
   <component name="ProjectId" id="2vE1ywXPYw3HqZGEODuO12DaILE" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.Randon_forest.executor": "Run",
-    "Python.dash_IA.executor": "Run",
-    "Python.dash_view.executor": "Run",
-    "Python.dashboard.executor": "Run",
-    "Python.data_train.executor": "Run",
-    "Python.modelo_otimizado.executor": "Run",
-    "Python.otimizacao.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "com.codeium.enabled": "true",
-    "dart.analysis.tool.window.visible": "false",
-    "last_opened_file_path": "/Users/kaioguilherme/Repositorio/dashboard-covid19",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.Randon_forest.executor&quot;: &quot;Run&quot;,
+    &quot;Python.dash_IA.executor&quot;: &quot;Run&quot;,
+    &quot;Python.dash_view.executor&quot;: &quot;Run&quot;,
+    &quot;Python.dashboard.executor&quot;: &quot;Run&quot;,
+    &quot;Python.data_train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.modelo_otimizado.executor&quot;: &quot;Run&quot;,
+    &quot;Python.otimizacao.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;com.codeium.enabled&quot;: &quot;true&quot;,
+    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore_missing_gitignore&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/kaioguilherme/Repositorio/Dashboard-covid19&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -69,6 +92,8 @@
       <option name="presentableId" value="Default" />
       <updated>1743695679155</updated>
       <workItem from="1743695680949" duration="14102000" />
+      <workItem from="1743727299906" duration="5862000" />
+      <workItem from="1744312240308" duration="9260000" />
     </task>
     <servers />
   </component>
@@ -82,6 +107,8 @@
     <SUITE FILE_PATH="coverage/dashboard_covid19$dashboard.coverage" NAME="dashboard Coverage Results" MODIFIED="1743717726746" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dashboard" />
     <SUITE FILE_PATH="coverage/dashboard_covid19$otimizacao.coverage" NAME="otimizacao Coverage Results" MODIFIED="1743696389821" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/IA_Models" />
     <SUITE FILE_PATH="coverage/dashboard_covid19$data_train.coverage" NAME="data_train Coverage Results" MODIFIED="1743717558820" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/IA_Models" />
+    <SUITE FILE_PATH="coverage/Dashboard_covid19$dashboard.coverage" NAME="dashboard Coverage Results" MODIFIED="1744312282336" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dashboard" />
     <SUITE FILE_PATH="coverage/dashboard_covid19$modelo_otimizado.coverage" NAME="modelo_otimizado Coverage Results" MODIFIED="1743696496612" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/IA_Models" />
+    <SUITE FILE_PATH="coverage/Dashboard_covid19$Randon_forest.coverage" NAME="Randon_forest Coverage Results" MODIFIED="1743729098240" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/IA_Models" />
   </component>
 </project>

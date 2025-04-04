@@ -4,13 +4,13 @@ import os, sys
 # Adiciona o diretório pai ao caminho para importar corretamente
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 from IA_Models.data_train import X_train, y_train, X_test
-
+# from avaliar import avaliar_modelo
 modelo_otimizado = RandomForestClassifier(
-    n_estimators=100,
-    max_depth=10,
-    min_samples_split=4,
-    min_samples_leaf=2,
-    max_features="sqrt",
+    n_estimators=30,
+    max_depth=30,
+    min_samples_split=8,
+    min_samples_leaf=1,
+    max_features="log2",
     bootstrap=True,
     class_weight=None,
     random_state=42,
