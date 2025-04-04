@@ -3,13 +3,13 @@ import plotly.express as px
 from dash import dcc, html
 
 # Carrega os datasets
-dados_IA = pd.read_csv('../datasets/Brasil-2021-processado_IA.csv')
-dados_IA_2020_2024 = pd.read_csv('../datasets/Brasil-2020-2024-processado_IA.csv')
-dados_limpos_2020 = pd.read_csv('../datasets/Brasil-2020-limpo.csv')
-dados_limpos_2021 = pd.read_csv('../datasets/Brasil-2021-limpo.csv')
-dados_limpos_2022 = pd.read_csv('../datasets/Brasil-2022-limpo.csv')
-dados_limpos_2023 = pd.read_csv('../datasets/Brasil-2023-limpo.csv')
-dados_limpos_2024 = pd.read_csv('../datasets/Brasil-2024-limpo.csv')
+dados_IA = pd.read_csv('datasets/Brasil-2021-processado_IA.csv')
+dados_IA_2020_2024 = pd.read_csv('datasets/Brasil-2020-2024-processado_IA.csv')
+dados_limpos_2020 = pd.read_csv('datasets/Brasil-2020-limpo.csv')
+dados_limpos_2021 = pd.read_csv('datasets/Brasil-2021-limpo.csv')
+dados_limpos_2022 = pd.read_csv('datasets/Brasil-2022-limpo.csv')
+dados_limpos_2023 = pd.read_csv('datasets/Brasil-2023-limpo.csv')
+dados_limpos_2024 = pd.read_csv('datasets/Brasil-2024-limpo.csv')
 # faz a concatenação na lista dos dados de 2020 a 2024
 dados_limpos_2020_2024 = pd.concat([dados_limpos_2020, dados_limpos_2021, dados_limpos_2022, dados_limpos_2023, dados_limpos_2024])
 
@@ -24,8 +24,8 @@ colunas_duplicadas = dados_dash_2020_2024.columns.duplicated(keep='first')
 dados_dash_2020_2024 = dados_dash_2020_2024.loc[:, ~colunas_duplicadas]
 
 # mostra as colunas do dataframe
-colunas = dados_dash_2020_2024.columns.tolist()
-print(colunas)
+# colunas = dados_dash_2020_2024.columns.tolist()
+# print(colunas)
 
 # Gráfico de distribuição de Idade
 dist_idade = px.histogram(dados_dash_2020_2024, x='idade', nbins=30, title="Distribuição de Idade (2020 - 2024)",

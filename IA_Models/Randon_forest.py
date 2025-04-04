@@ -1,4 +1,4 @@
-from IA_Models.data_train import X_train, X_test, y_train, y_test
+from data_train import X_train, X_test, y_train, y_test
 from sklearn.ensemble import RandomForestClassifier
 from avaliar import avaliar_modelo
 

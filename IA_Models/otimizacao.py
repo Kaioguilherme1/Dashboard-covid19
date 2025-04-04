@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import RandomizedSearchCV
 
-from IA_Models.data_train import X_train, y_train, X_test, y_test
+from data_train import X_train, y_train, X_test, y_test
 
 # 1. Definir o modelo_hiper
 modelo_hiper = RandomForestClassifier(random_state=42)

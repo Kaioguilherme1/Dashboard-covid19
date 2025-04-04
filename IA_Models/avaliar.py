@@ -3,7 +3,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
-from IA_Models.data_train import y_test
+from data_train import y_test
 
 
 def avaliar_modelo(modelo, y_pred):

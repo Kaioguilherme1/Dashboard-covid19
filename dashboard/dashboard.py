@@ -3,13 +3,18 @@ import pandas as pd
 import plotly.express as px
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
-from IA_Models.modelo_otimizado import modelo_otimizado
 from dash_IA import render_ai_form_content
 from dash_view import render_dashboard_content, dados_dash_2020_2024
+import os, sys
+
+# Adiciona a referencia da pasta IA_Models
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+from IA_Models.modelo_otimizado import modelo_otimizado
+
 
 
 # organiza a lista para armazenar os dados do paciente para o processamento de IA
-paciente = pd.read_csv('../datasets/Brasil-2021-processado_IA.csv')
+paciente = pd.read_csv('datasets/Brasil-2021-processado_IA.csv')
 
 # Limpa o dataframe do paciente mas mantem
 paciente = paciente.iloc[0:0]
@@ -161,7 +166,6 @@ def update_output(n_clicks, nome, genero, idade, sintomas_gerais, outros_sintoma
         paciente = pd.DataFrame([dados_paciente])
         # remove a coluna diagnosticoCOVID
         paciente = paciente.drop(columns=['diagnosticoCOVID'], errors='ignore')
-        print(paciente.head())
 
         # aplica o modelo de IA para prever a probabilidade de ter covid
         previsao = modelo_otimizado.predict_proba(paciente)

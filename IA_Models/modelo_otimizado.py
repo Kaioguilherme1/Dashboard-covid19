@@ -1,6 +1,8 @@
 #@title 4.4. Treinamento do modelo com os melhores hiperparâmetros
 from sklearn.ensemble import RandomForestClassifier
-
+import os, sys
+# Adiciona o diretório pai ao caminho para importar corretamente
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 from IA_Models.data_train import X_train, y_train, X_test
 
 modelo_otimizado = RandomForestClassifier(
