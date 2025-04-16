@@ -154,52 +154,67 @@ def render_tab_content(tab):
 
 
 @app.callback(
-    [Output('filtered-data', 'children'),
-     Output('sexo-dropdown', 'options'),
-     Output('sexo-dropdown', 'value'),
-     Output('idade-slider', 'value'),
-     Output('sintomas-dropdown', 'options'),
-     Output('sintomas-dropdown', 'value')],
-     Output('idade-slider', 'min'),
-     Output('idade-slider', 'max'),
-    [Input('idade-slider', 'value'),
-     Input('sexo-dropdown', 'value'),
-     Input('sintomas-dropdown', 'value')],
+    [
+        Output('filtered-data', 'children'),
+        Output('sexo-dropdown', 'options'),
+        Output('sexo-dropdown', 'value'),
+        Output('idade-slider', 'value'),
+        Output('sintomas-dropdown', 'options'),
+        Output('sintomas-dropdown', 'value'),
+        Output('idade-slider', 'min'),
+        Output('idade-slider', 'max'),
+    ],
+    [
+        Input('idade-slider', 'value'),
+        Input('sexo-dropdown', 'value'),
+        Input('sintomas-dropdown', 'value'),
+    ],
     prevent_initial_call=True
 )
 def atualizar_filtros_e_dashboard(idade_range, sexo_selecionado, sintomas_selecionados):
     global dados_dash_2020_2024
 
-    # Base original para manter as opções dos filtros
+    # Base original para opções de filtro
     dados_originais = dados_dash_2020_2024.copy()
-
-    # Filtragem dos dados
     dados_filtrados = dados_originais.copy()
+
+    # Aplicação dos filtros
     if idade_range:
         dados_filtrados = dados_filtrados[
-            (dados_filtrados['idade'] >= idade_range[0]) & (dados_filtrados['idade'] <= idade_range[1])
-        ]
+            (dados_filtrados['idade'] >= idade_range[0]) &
+            (dados_filtrados['idade'] <= idade_range[1])
+            ]
+
     if sexo_selecionado:
         dados_filtrados = dados_filtrados[dados_filtrados['sexo'].isin(sexo_selecionado)]
+
     if sintomas_selecionados:
         for sintoma in sintomas_selecionados:
             if sintoma in dados_filtrados.columns:
                 dados_filtrados = dados_filtrados[dados_filtrados[sintoma] == 1]
 
-    # Renderiza o dashboard com os dados filtrados
-    dashboard_content = render_dashboard_content(
-        dados_filtrados,
-    )
+    # Renderiza conteúdo do dashboard com dados filtrados
+    dashboard_content = render_dashboard_content(dados_filtrados)
 
-    # Atualiza as opções dos filtros
-    sexo_options = [{'label': sexo, 'value': sexo} for sexo in dados_originais['sexo'].unique()]
-    sintomas_options = [{'label': sintoma, 'value': sintoma} for sintoma in dados_originais.columns if sintoma.startswith('sintoma_')]
+    # Atualiza opções dos filtros
+    sexo_options = [{'label': s, 'value': s} for s in sorted(dados_originais['sexo'].dropna().unique())]
+    sintomas_options = [{'label': s, 'value': s} for s in ['dor_corpo', 'dor_costas', 'dor_abdomen', 'dor_toracica', 'dor_peito', 'dor_olhos', 'dor_geral', 'mialgia', 'algia', 'fadiga', 'febre', 'tosse', 'coriza', 'congestao_nasal', 'diarreia', 'nausea', 'vomito', 'espirros', 'olfato_alterado', 'paladar_alterado', 'garganta', 'dor_de_cabeca', 'mal_estar', 'dor_de_ouvido', 'tontura', 'desconforto_respiratorio', 'saturacao_baixa', 'sintomas_indefinidos', 'asma', 'hipertensao', 'sem_comorbidade', 'diabetes', 'bronquite', 'tabagismo', 'epilepsia', 'ansiedade', 'hipotireoidismo', 'tireoidite', 'rinite', 'sinusite', 'hipotensao', 'comorbidades_indefinidas', 'nao_declarado', 'pre_operatorio', 'Esclerose Lateral Amiotrófica', 'tomouPrimeiraDose', 'tomouSegundaDose', 'diagnosticoCOVID']]
+
+    # Mantém o intervalo atual de idade caso já esteja definido
     idade_min = int(dados_originais['idade'].min())
     idade_max = int(dados_originais['idade'].max())
-    idade_value = [idade_min, idade_max]
+    idade_value = idade_range if idade_range else [idade_min, idade_max]
 
-    return dashboard_content, sexo_options, sexo_selecionado, idade_value, sintomas_options, sintomas_selecionados, idade_min, idade_max
-
+    return (
+        dashboard_content,
+        sexo_options,
+        sexo_selecionado,
+        idade_value,
+        sintomas_options,
+        sintomas_selecionados,
+        idade_min,
+        idade_max
+    )
 
 
 # Callback para exibir os dados selecionados
@@ -257,7 +272,7 @@ def update_output(n_clicks, nome, genero, idade, sintomas_gerais, outros_sintoma
         # Converte o dicionário em um DataFrame
         paciente = pd.DataFrame([dados_paciente])
         # remove a coluna diagnosticoCOVID
-        paciente = paciente.drop(columns=['diagnosticoCOVID'], errors='ignore')
+        paciente = paciente.drop(columns=['diagnosticoCOVID','dor_toracica', 'diarreia', 'nausea', 'vomito', 'espirros'], errors='ignore')
 
         # aplica o modelo de IA para prever a probabilidade de ter covid
         previsao = modelo_otimizado.predict_proba(paciente)
@@ -288,23 +303,80 @@ def update_output(n_clicks, nome, genero, idade, sintomas_gerais, outros_sintoma
 
         # Formata a exibição dos resultados
         return html.Div([
-            html.H3("Resultado da Análise", style={'color': '#1e90ff', 'font-family': 'Arial, sans-serif'}),
-            html.P(f"Nome: {nome}", style={'font-size': '18px', 'color': '#333'}),
-            html.P(f"Gênero: {genero}", style={'font-size': '18px', 'color': '#333'}),
-            html.P(f"Idade: {idade}", style={'font-size': '18px', 'color': '#333'}),
-            html.P(f"Sintomas Gerais: {', '.join(sintomas_gerais) if sintomas_gerais else 'Nenhum'}",
-                   style={'font-size': '18px', 'color': '#333'}),
-            html.P(f"Outros Sintomas: {', '.join(outros_sintomas) if outros_sintomas else 'Nenhum'}",
-                   style={'font-size': '18px', 'color': '#333'}),
-            html.P(f"Comorbidades: {', '.join(comorbidades) if comorbidades else 'Nenhuma'}",
-                   style={'font-size': '18px', 'color': '#333'}),
-            html.P(f"Vacinação: {vacinacao}", style={'font-size': '18px', 'color': '#333'}),
-            html.P(f"Chances de não ter COVID: {prob_nao_covid:.2%}", style={'font-size': '18px', 'color': '#333'}),
-            html.P(f"Chances de ter COVID: {prob_covid:.2%}",
-                   style={'font-size': '18px', 'color': '#333', 'font-weight': 'bold'}),
-            dcc.Graph(figure=dist_sintomas),
-        ], style={'border-radius': '10px', 'background-color': '#f9f9f9', 'padding': '20px',
-                  'box-shadow': '0px 0px 10px rgba(0, 0, 0, 0.1)'})
+                html.H3("🔍 Resultado da Análise", style={
+                    'color': '#1e90ff',
+                    'font-family': 'Arial, sans-serif',
+                    'margin-bottom': '20px'
+                }),
+
+                # Grupo: Dados pessoais
+                html.Div([
+                    html.Div([
+                        html.P("👤 Nome:", style={'font-weight': 'bold', 'margin-bottom': '2px'}),
+                        html.P(nome, style={'font-size': '17px', 'color': '#333'})
+                    ], style={'flex': '2'}),
+
+                    html.Div([
+                        html.P("⚧️ Gênero:", style={'font-weight': 'bold', 'margin-bottom': '2px'}),
+                        html.P(genero, style={'font-size': '17px', 'color': '#333'})
+                    ], style={'flex': '1'}),
+
+                    html.Div([
+                        html.P("🎂 Idade:", style={'font-weight': 'bold', 'margin-bottom': '2px'}),
+                        html.P(f"{idade} anos", style={'font-size': '17px', 'color': '#333'})
+                    ], style={'flex': '1'}),
+                ], style={'display': 'flex', 'gap': '20px', 'margin-bottom': '20px'}),
+
+                # Grupo: Sintomas e comorbidades
+                html.Div([
+                    html.P("🦠 Sintomas Gerais:", style={'font-weight': 'bold'}),
+                    html.P(', '.join(sintomas_gerais) if sintomas_gerais else 'Nenhum', style={'margin-bottom': '10px'}),
+
+                    html.P("🤒 Outros Sintomas:", style={'font-weight': 'bold'}),
+                    html.P(', '.join(outros_sintomas) if outros_sintomas else 'Nenhum', style={'margin-bottom': '10px'}),
+
+                    html.P("💊 Comorbidades:", style={'font-weight': 'bold'}),
+                    html.P(', '.join(comorbidades) if comorbidades else 'Nenhuma', style={'margin-bottom': '10px'}),
+
+                    html.P("💉 Vacinação:", style={'font-weight': 'bold'}),
+                    html.P(vacinacao, style={'margin-bottom': '20px'}),
+                ], style={'font-size': '17px', 'color': '#333'}),
+
+                # Grupo: Resultados da previsão
+                html.Div([
+                    html.P("📈 Chances de NÃO ter COVID:", style={
+                        'font-weight': 'bold',
+                        'color': '#2e8b57'
+                    }),
+                    html.P(f"{prob_nao_covid:.2%}", style={
+                        'font-size': '20px',
+                        'color': '#2e8b57',
+                        'margin-bottom': '10px'
+                    }),
+
+                    html.P("📉 Chances de TER COVID:", style={
+                        'font-weight': 'bold',
+                        'color': '#b22222'
+                    }),
+                    html.P(f"{prob_covid:.2%}", style={
+                        'font-size': '22px',
+                        'font-weight': 'bold',
+                        'color': '#b22222',
+                        'margin-bottom': '20px'
+                    }),
+                ]),
+
+                # Gráfico de distribuição dos sintomas
+                dcc.Graph(figure=dist_sintomas)
+
+            ], style={
+                'border-radius': '12px',
+                'background-color': '#f9f9f9',
+                'padding': '30px',
+                'box-shadow': '0px 4px 12px rgba(0, 0, 0, 0.1)',
+                'font-family': 'Arial, sans-serif',
+                'margin-top': '20px'
+            })
     return html.Div()
 
 # Rodar o servidor

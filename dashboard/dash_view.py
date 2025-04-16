@@ -13,6 +13,8 @@ dados_limpos_2022 = pd.read_csv('datasets/Brasil-2022-limpo.csv')
 dados_limpos_2023 = pd.read_csv('datasets/Brasil-2023-limpo.csv')
 dados_limpos_2024 = pd.read_csv('datasets/Brasil-2024-limpo.csv')
 
+print(dados_IA.columns.to_list())
+
 # Concatena os dados de 2020 a 2024
 dados_limpos_2020_2024 = pd.concat([dados_limpos_2020, dados_limpos_2021, dados_limpos_2022, dados_limpos_2023, dados_limpos_2024])
 dados_IA_2020_2024 = dados_IA_2020_2024.reset_index(drop=True)
@@ -51,7 +53,7 @@ def render_dashboard_content(dados_dash_2020_2024):
     total_casos_fig = criar_indicador(total_casos, "Total de Casos", "#333")
     casos_confirmados_fig = criar_indicador(total_confirmados, "Casos Confirmados", "#1e90ff")
     casos_negativos_fig = criar_indicador(total_negativos, "Casos Negativos", "#ff6347")
-    taxa_confirmados_fig = criar_indicador(taxa_confirmados, "Taxa de Confirmação (%)", "#32cd32")
+    taxa_confirmados_fig = criar_indicador(taxa_confirmados, "Taxa Confirmados (%)", "#32cd32")
 
     # Gráficos
     faixa_etaria_fig = px.line(
@@ -65,13 +67,51 @@ def render_dashboard_content(dados_dash_2020_2024):
         labels={'idade': 'Idade', 'count': 'Frequência'}, color_discrete_sequence=['blue']
     )
 
-    sintomas_cols = [col for col in dados_dash_2020_2024.columns if 'sintomas_' in col or 'outrosSintomas_' in col]
+    # Lista manual das colunas de sintomas
+    sintomas_cols = [
+        'dor_corpo', 'dor_costas', 'dor_abdomen',
+        'dor_peito', 'dor_olhos', 'dor_geral', 'mialgia', 'algia',
+        'fadiga', 'febre', 'tosse', 'coriza', 'congestao_nasal',
+        'diarreia', 'nausea', 'olfato_alterado',
+        'paladar_alterado', 'garganta', 'dor_de_cabeca',
+        'mal_estar', 'dor_de_ouvido', 'tontura', 'desconforto_respiratorio',
+        'saturacao_baixa', 'sintomas_indefinidos'
+    ]
+
+    # Calcula a frequência média por diagnóstico
     frequencia_sintomas = dados_dash_2020_2024.groupby('diagnosticoCOVID')[sintomas_cols].mean().reset_index()
-    frequencia_sintomas_long = frequencia_sintomas.melt(id_vars='diagnosticoCOVID', var_name='Sintoma', value_name='Frequência')
+
+    # Transforma em formato longo
+    frequencia_sintomas_long = frequencia_sintomas.melt(
+        id_vars='diagnosticoCOVID',
+        var_name='Sintoma',
+        value_name='Frequência'
+    )
+
+    # Converte para porcentagem
     frequencia_sintomas_long['Frequência'] *= 100
+
+    # Calcula frequência média geral por sintoma
+    frequencia_media_sintomas = frequencia_sintomas_long.groupby('Sintoma')['Frequência'].mean().reset_index()
+
+    # Ordena por frequência
+    frequencia_media_sintomas = frequencia_media_sintomas.sort_values(by='Frequência', ascending=False)
+
+    # Gráfico com todos os sintomas ordenados por frequência
     sintomas_frequentes_fig = px.bar(
-        frequencia_sintomas_long.groupby('Sintoma')['Frequência'].mean().nlargest(20).reset_index(),
-        x='Frequência', y='Sintoma', orientation='h', title="Top 20 Sintomas Mais Frequentes"
+        frequencia_media_sintomas,
+        x='Frequência',
+        y='Sintoma',
+        orientation='h',
+        title="Frequência Média de Todos os Sintomas Reportados",
+        labels={'Frequência': 'Frequência (%)', 'Sintoma': 'Nome do Sintoma'},
+        color_discrete_sequence=['#1e90ff']
+    )
+
+    # Ordenação visual e layout
+    sintomas_frequentes_fig.update_layout(
+        yaxis=dict(categoryorder='total ascending'),
+        template='plotly_white'
     )
     casos_por_ano_fig = px.bar(
         dados_dash_2020_2024.groupby('ano').size().reset_index(name='Número de Casos'),
@@ -84,8 +124,35 @@ def render_dashboard_content(dados_dash_2020_2024):
         title="Proporção de Casos Confirmados e Negativos"
     )
     # Filtra os 20 sintomas mais frequentes
-    top_20_sintomas = frequencia_sintomas_long.groupby('Sintoma')['Frequência'].mean().nlargest(20).index
-    frequencia_sintomas_top_20 = frequencia_sintomas_long[frequencia_sintomas_long['Sintoma'].isin(top_20_sintomas)]
+    # Obtém os 20 sintomas mais frequentes com base na média da frequência
+    top_20_sintomas = (
+        frequencia_sintomas_long
+        .groupby('Sintoma')['Frequência']
+        .mean()
+        .sort_values(ascending=False)
+        .head(20)
+        .index
+    )
+
+    # Filtra os dados apenas com os top 20 e mantém a ordem
+    frequencia_sintomas_top_20 = (
+        frequencia_sintomas_long[
+            frequencia_sintomas_long['Sintoma'].isin(top_20_sintomas)
+        ]
+        .copy()
+    )
+
+    # Garante que a ordem dos sintomas respeite o ranking
+    frequencia_sintomas_top_20['Sintoma'] = pd.Categorical(
+        frequencia_sintomas_top_20['Sintoma'],
+        categories=top_20_sintomas,
+        ordered=True
+    )
+
+    # Ordena o DataFrame de acordo com a ordem dos top sintomas
+    frequencia_sintomas_top_20 = frequencia_sintomas_top_20.sort_values('Sintoma')
+    # faz o map da diagnosticoCOVID
+    frequencia_sintomas_top_20['diagnosticoCOVID'] = frequencia_sintomas_top_20['diagnosticoCOVID'].map({0: 'Negativo', 1: 'Positivo'})
 
     # Gráfico atualizado com os 20 sintomas mais frequentes
     sintomas_empilhados_fig = px.bar(
@@ -94,8 +161,15 @@ def render_dashboard_content(dados_dash_2020_2024):
         y='Frequência',
         color='diagnosticoCOVID',
         barmode='stack',
-        title="Top 20 Sintomas Mais Frequentes por Diagnóstico",
-        labels={'diagnosticoCOVID': 'Diagnóstico', 'Frequência': 'Porcentagem'}
+        title="Top Sintomas Mais Frequentes por Diagnóstico",
+        labels={'diagnosticoCOVID': 'Diagnóstico', 'Frequência': 'Porcentagem'},
+        color_discrete_map = {
+            'Positivo': '#d62728',  # vermelho
+            'Negativo': '#1f77b4'  # azul
+        },
+        category_orders={
+            'diagnosticoCOVID': ['Positivo', 'Negativo']
+        }
     )
 
     # Ajusta o layout do gráfico
@@ -107,16 +181,63 @@ def render_dashboard_content(dados_dash_2020_2024):
     )
 
     # Filtra as colunas relacionadas a comorbidades
-    comorbidades_cols = [col for col in dados_dash_2020_2024.columns if 'outrasCondicoes_' in col]
+    comorbidades_cols  = [
+    'asma', 'hipertensao', 'sem_comorbidade', 'diabetes', 'bronquite',
+    'tabagismo', 'epilepsia', 'ansiedade', 'hipotireoidismo',
+    'tireoidite', 'rinite', 'sinusite', 'hipotensao',
+    'comorbidades_indefinidas', 'nao_declarado', 'pre_operatorio',
+    'Esclerose Lateral Amiotrófica']
 
     # Calcula a frequência média de cada comorbidade por diagnóstico
-    frequencia_comorbidades = dados_dash_2020_2024.groupby('diagnosticoCOVID')[comorbidades_cols].mean().reset_index()
-    frequencia_comorbidades_long = frequencia_comorbidades.melt(id_vars='diagnosticoCOVID', var_name='Comorbidade', value_name='Frequência')
-    frequencia_comorbidades_long['Frequência'] *= 100  # Converte para porcentagem
+    frequencia_comorbidades = (
+        dados_dash_2020_2024
+        .groupby('diagnosticoCOVID')[comorbidades_cols]
+        .mean()
+        .reset_index()
+    )
 
-    # Seleciona as 20 comorbidades mais frequentes
-    top_20_comorbidades = frequencia_comorbidades_long.groupby('Comorbidade')['Frequência'].mean().nlargest(20).index
-    frequencia_comorbidades_top_20 = frequencia_comorbidades_long[frequencia_comorbidades_long['Comorbidade'].isin(top_20_comorbidades)]
+    # Transforma para formato longo
+    frequencia_comorbidades_long = (
+        frequencia_comorbidades
+        .melt(
+            id_vars='diagnosticoCOVID',
+            var_name='Comorbidade',
+            value_name='Frequência'
+        )
+    )
+
+    # Converte para porcentagem
+    frequencia_comorbidades_long['Frequência'] *= 100
+
+    # Seleciona as 20 comorbidades mais frequentes com base na média
+    top_20_comorbidades = (
+        frequencia_comorbidades_long
+        .groupby('Comorbidade')['Frequência']
+        .mean()
+        .sort_values(ascending=False)
+        .head(20)
+        .index
+    )
+
+    # Filtra os dados mantendo apenas as top 20 comorbidades
+    frequencia_comorbidades_top_20 = (
+        frequencia_comorbidades_long[
+            frequencia_comorbidades_long['Comorbidade'].isin(top_20_comorbidades)
+        ]
+        .copy()
+    )
+
+    # Define ordem categórica para manter a ordenação nos gráficos
+    frequencia_comorbidades_top_20['Comorbidade'] = pd.Categorical(
+        frequencia_comorbidades_top_20['Comorbidade'],
+        categories=top_20_comorbidades,
+        ordered=True
+    )
+
+    # Ordena o DataFrame de acordo com o ranking
+    frequencia_comorbidades_top_20 = frequencia_comorbidades_top_20.sort_values('Comorbidade')
+    # faz o map da diagnosticoCOVID
+    frequencia_comorbidades_top_20['diagnosticoCOVID'] = frequencia_comorbidades_top_20['diagnosticoCOVID'].map({0: 'Negativo', 1: 'Positivo'})
 
     # Gráfico atualizado com as 20 comorbidades mais frequentes
     comorbidades_fig = px.bar(
@@ -125,8 +246,15 @@ def render_dashboard_content(dados_dash_2020_2024):
         y='Frequência',
         color='diagnosticoCOVID',
         barmode='stack',
-        title="Top 20 Comorbidades Mais Frequentes por Diagnóstico",
-        labels={'diagnosticoCOVID': 'Diagnóstico', 'Frequência': 'Porcentagem'}
+        title="Top Comorbidades Mais Frequentes por Diagnóstico",
+        labels={'diagnosticoCOVID': 'Diagnóstico', 'Frequência': 'Porcentagem'},
+        color_discrete_map = {
+            'Positivo': '#d62728',  # vermelho
+            'Negativo': '#1f77b4'  # azul
+        },
+        category_orders = {
+            'diagnosticoCOVID': ['Positivo', 'Negativo']
+        }
     )
 
     # Ajusta o layout do gráfico
@@ -137,56 +265,165 @@ def render_dashboard_content(dados_dash_2020_2024):
         legend_title="Diagnóstico"
     )
 
+    heat_data = frequencia_sintomas_top_20.pivot(index='Sintoma', columns='diagnosticoCOVID',
+                                                 values='Frequência').fillna(0)
+
     return html.Div([
-        html.H1("Dashboard de Dados de COVID-19 (2020 - 2024)", style={'textAlign': 'center', 'color': '#1e90ff'}),
+        # Cabeçalho Principal
+        html.H1("🧠 Explorando Sintomas e Comorbidades com IA", style={
+            'textAlign': 'center',
+            'color': '#1e90ff',
+            'fontSize': '36px',
+            'marginTop': '20px'
+        }),
+        html.H3("Previsão e Visualização Interativa de Casos de COVID-19", style={
+            'textAlign': 'center',
+            'color': '#333',
+            'fontWeight': '300',
+            'marginBottom': '30px'
+        }),
+
+        html.Hr(),
+
+        # Introdução do Projeto
+        html.Div([
+            html.H2("📌 Sobre o Projeto", style={'color': '#1e90ff'}),
+            html.P(
+                "Este dashboard é parte de um estudo acadêmico cujo objetivo é compreender como sintomas, comorbidades "
+                "e fatores demográficos influenciam o diagnóstico de COVID-19. Utilizando dados do SINAN (Sistema de Informação de Agravos de Notificação), "
+                "coletados entre os anos de 2020 a 2024, foi desenvolvido um modelo de Inteligência Artificial capaz de prever a probabilidade de diagnóstico positivo.",
+                style={'textAlign': 'justify'}
+            ),
+            html.P(
+                "Os dados aqui visualizados não apenas possibilitam a análise exploratória, mas também serviram como "
+                "**base de treinamento para a IA preditiva**, reforçando a capacidade do modelo em aprender padrões a partir de registros clínicos reais.",
+                style={'textAlign': 'justify', 'fontStyle': 'italic'}
+            ),
+            html.P("📂 Bases consultadas:", style={'marginTop': '15px'}),
+            html.Ul([
+                html.Li("Notificações de Síndrome Gripal - 2020"),
+                html.Li("Notificações de Síndrome Gripal - 2021"),
+                html.Li("Notificações de Síndrome Gripal - 2022"),
+                html.Li("Notificações de Síndrome Gripal - 2023"),
+                html.Li("Notificações de Síndrome Gripal - 2024"),
+            ]),
+        ], style={'padding': '25px', 'backgroundColor': '#f8f9fa', 'borderRadius': '10px', 'margin': '20px'}),
+
+        html.Hr(),
 
         # Filtros
         html.Div([
-          html.Div([
-              html.Label("Idade:"),
-              dcc.RangeSlider(
-                  id='idade-slider',
-                  min=data_filtro['idade'].min(),
-                  max=data_filtro['idade'].max(),
-                  step=1,
-                  marks={i: str(i) for i in range(int(data_filtro['idade'].min()), int(data_filtro['idade'].max()) + 1, 10)},
-                  value=[data_filtro['idade'].min(), data_filtro['idade'].max()]
-              )
-          ], style={'width': '25%', 'display': 'inline-block'}),
-          html.Div([
-              html.Label("Sexo:"),
-              dcc.Dropdown(
-                  id='sexo-dropdown',
-                  options=[{'label': sexo, 'value': sexo} for sexo in data_filtro['sexo'].unique()],
-                  multi=True, placeholder="Selecione o sexo",
-              )
-          ], style={'width': '25%', 'display': 'inline-block'}),
-          html.Div([
-              html.Label("Sintomas:"),
-              dcc.Dropdown(
-                  id='sintomas-dropdown',
-                  options=[{'label': sintoma, 'value': sintoma} for sintoma in data_filtro.columns if 'sintomas_' in sintoma],
-                  multi=True, placeholder="Selecione os sintomas",
-              )
-          ], style={'width': '25%', 'display': 'inline-block'}),
-        ], style={'display': 'flex', 'justify-content': 'space-between', 'padding': '20px'}),
+            html.H2("🎛️ Filtros Interativos", style={'color': '#1e90ff'}),
+            html.P("Selecione as faixas de idade, sexo ou sintomas para ajustar os dados exibidos no dashboard."),
+            html.Div([
+                html.Div([
+                    html.Label("Idade:"),
+                    dcc.RangeSlider(
+                        id='idade-slider',
+                        min=data_filtro['idade'].min(),
+                        max=data_filtro['idade'].max(),
+                        step=1,
+                        marks={i: str(i) for i in
+                               range(int(data_filtro['idade'].min()), int(data_filtro['idade'].max()) + 1, 10)},
+                        value=[data_filtro['idade'].min(), data_filtro['idade'].max()]
+                    )
+                ], style={'width': '30%', 'display': 'inline-block'}),
+                html.Div([
+                    html.Label("Sexo:"),
+                    dcc.Dropdown(
+                        id='sexo-dropdown',
+                        options=[{'label': sexo, 'value': sexo} for sexo in data_filtro['sexo'].unique()],
+                        multi=True,
+                        placeholder="Selecione o sexo"
+                    )
+                ], style={'width': '30%', 'display': 'inline-block'}),
+                html.Div([
+                    html.Label("Sintomas:"),
+                    dcc.Dropdown(
+                        id='sintomas-dropdown',
+                        options=[{'label': sintoma, 'value': sintoma} for sintoma in ['dor_corpo', 'dor_costas', 'dor_abdomen', 'dor_toracica', 'dor_peito', 'dor_olhos', 'dor_geral', 'mialgia', 'algia', 'fadiga', 'febre', 'tosse', 'coriza', 'congestao_nasal', 'diarreia', 'nausea', 'vomito', 'espirros', 'olfato_alterado', 'paladar_alterado', 'garganta', 'dor_de_cabeca', 'mal_estar', 'dor_de_ouvido', 'tontura', 'desconforto_respiratorio', 'saturacao_baixa', 'sintomas_indefinidos', 'asma', 'hipertensao', 'sem_comorbidade', 'diabetes', 'bronquite', 'tabagismo', 'epilepsia', 'ansiedade', 'hipotireoidismo', 'tireoidite', 'rinite', 'sinusite', 'hipotensao', 'comorbidades_indefinidas', 'nao_declarado', 'pre_operatorio', 'Esclerose Lateral Amiotrófica', 'tomouPrimeiraDose', 'tomouSegundaDose', 'diagnosticoCOVID']],
+                        multi=True,
+                        placeholder="Selecione os sintomas"
+                    )
+                ], style={'width': '30%', 'display': 'inline-block'}),
+            ], style={'display': 'flex', 'justifyContent': 'space-between', 'padding': '20px'}),
+        ]),
+
+        html.Hr(),
 
         # Indicadores
         html.Div([
-            html.Div(dcc.Graph(figure=total_casos_fig), style={'width': '24%','height': '3%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=casos_confirmados_fig), style={'width': '24%','height': '3%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=casos_negativos_fig), style={'width': '24%','height': '3%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=taxa_confirmados_fig), style={'width': '24%','height': '3%', 'display': 'inline-block'}),
-        ], style={'display': 'flex', 'justify-content': 'space-between'}),
+            html.H2("📊 Visão Geral dos Casos", style={'color': '#1e90ff'}),
+            html.P("Estatísticas principais dos registros clínicos notificados no período de 2020 a 2024."),
+            html.Div([
+                html.Div(dcc.Graph(figure=total_casos_fig), style={'width': '24%', 'display': 'inline-block'}),
+                html.Div(dcc.Graph(figure=casos_confirmados_fig), style={'width': '24%', 'display': 'inline-block'}),
+                html.Div(dcc.Graph(figure=casos_negativos_fig), style={'width': '24%', 'display': 'inline-block'}),
+                html.Div(dcc.Graph(figure=taxa_confirmados_fig), style={'width': '24%', 'display': 'inline-block'}),
+            ], style={'display': 'flex', 'justifyContent': 'space-between'}),
+        ]),
 
-        # Gráficos
+        html.Hr(),
+
+        # Evolução Temporal
         html.Div([
-            html.Div(dcc.Graph(figure=faixa_etaria_fig), style={'width': '48%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=dist_idade_fig), style={'width': '48%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=sintomas_frequentes_fig), style={'width': '48%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=comorbidades_fig), style={'width': '48%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=proporcao_casos_fig), style={'width': '48%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=sintomas_empilhados_fig), style={'width': '48%', 'display': 'inline-block'}),
-            html.Div(dcc.Graph(figure=casos_por_ano_fig), style={'width': '48%', 'display': 'inline-block'}),
-        ], style={'display': 'flex', 'flex-wrap': 'wrap', 'justify-content': 'space-between'}),
+            html.H2("📅 Evolução Temporal por Faixa Etária", style={'color': '#1e90ff'}),
+            html.P("Análise temporal dos casos agrupados por faixas etárias e distribuição anual."),
+            html.Div([
+                html.Div(dcc.Graph(figure=faixa_etaria_fig), style={'width': '48%', 'display': 'inline-block'}),
+                html.Div(dcc.Graph(figure=casos_por_ano_fig), style={'width': '48%', 'display': 'inline-block'}),
+            ], style={'display': 'flex', 'justifyContent': 'space-between'}),
+        ]),
+
+        html.Hr(),
+
+        # Perfil Demográfico
+        html.Div([
+            html.H2("👤 Perfil Etário e Diagnóstico", style={'color': '#1e90ff'}),
+            html.P("Distribuição das idades e proporção de diagnósticos positivos e negativos."),
+            html.Div([
+                html.Div(dcc.Graph(figure=dist_idade_fig), style={'width': '48%', 'display': 'inline-block'}),
+                html.Div(dcc.Graph(figure=proporcao_casos_fig), style={'width': '48%', 'display': 'inline-block'}),
+            ], style={'display': 'flex', 'justifyContent': 'space-between'}),
+        ]),
+
+        html.Hr(),
+
+        # Sessão: Sintomas e Comorbidades
+        html.Div([
+            html.H2("🤒 Distribuição de Sintomas e Comorbidades", style={'color': '#1e90ff'}),
+            html.P(
+                "Visualização das proporções de sintomas e comorbidades relatados nos registros clínicos. "
+                "Os dados estão segmentados por diagnóstico de COVID-19,"
+                "Essa separação permite uma análise comparativa entre os perfis clínicos de infectados e não infectados.",
+                style={'font-size': '16px', 'color': '#555'}
+            ),
+            html.Div([
+                html.Div(dcc.Graph(figure=sintomas_empilhados_fig), style={'width': '48%', 'display': 'inline-block'}),
+                html.Div(dcc.Graph(figure=comorbidades_fig), style={'width': '48%', 'display': 'inline-block'}),
+            ], style={'display': 'flex', 'justifyContent': 'space-between'}),
+        ]),
+
+        html.Hr(),
+
+        # Sessão: Sintomas mais Relevantes
+        html.Div([
+            html.H2("🧬 Frequência Geral dos Sintomas", style={'color': '#1e90ff'}),
+            html.P(
+                "Visualização dos sintomas relatados em ordem decrescente de frequência média, considerando todos os registros clínicos "
+                "entre os anos de 2020 a 2024. Essa ordenação permite identificar os sintomas mais comuns observados independentemente do diagnóstico, ",
+                style={'font-size': '16px', 'color': '#555'}
+            ),
+            html.Div([
+                html.Div(dcc.Graph(figure=sintomas_frequentes_fig), style={'width': '100%', 'display': 'inline-block'}),
+            ])
+        ]),
+        html.Hr(),
+
+
+        html.Div([
+            html.H4(
+                "🔬 Este dashboard representa uma ponte entre dados clínicos e inteligência artificial aplicada à saúde pública.",
+                style={'textAlign': 'center', 'fontStyle': 'italic', 'marginBottom': '40px', 'color': '#555'}),
+        ])
     ], id='filtered-data')
